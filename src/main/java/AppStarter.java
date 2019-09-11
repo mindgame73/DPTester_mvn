@@ -14,7 +14,7 @@ public class AppStarter extends Application {
     public void start(Stage primaryStage) throws Exception{
         Dimension dimension = Toolkit.getDefaultToolkit().getScreenSize();
         Parent root = FXMLLoader.load(getClass().getResource("sample.fxml"));
-        primaryStage.setTitle("Тестирование персонала Диспетчерского Пункта АО ГНЦ НИИАР");
+        primaryStage.setTitle("Тестирование персонала Диспетчерского Пункта АО ГНЦ НИИАР.");
         primaryStage.setScene(new Scene(root,dimension.width-100,dimension.height-100));
         primaryStage.setMaximized(true);
         primaryStage.initStyle(StageStyle.TRANSPARENT);
