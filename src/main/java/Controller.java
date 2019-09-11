@@ -50,7 +50,6 @@ public class Controller {
     @FXML
     private FlowPane lowerPane;
 
-
     private final File inputFile = new File("D:/input2.txt");
     private final File outputFile = new File("D:/results.txt");
 
@@ -58,6 +57,13 @@ public class Controller {
     private int num = 1;
     private double numRightAns = 0.0;
     private boolean isTimeOn = true;
+
+    private ToggleGroup group;
+    private Iterator<Question> iterator;
+    private ArrayList<Question> questions;
+    private ArrayList<String> wrongQuestions;
+    private Date startDate;
+    private Thread timerThread;
 
     @FXML
     void initialize() throws IOException {
@@ -78,6 +84,7 @@ public class Controller {
                     case DIGIT2: radioTwo.setSelected(true); break;
                     case DIGIT3: radioThree.setSelected(true); break;
                     case DIGIT4: radioFour.setSelected(true); break;
+                    case ENTER: checkAnswer();
                 }
             }
         });
@@ -90,6 +97,7 @@ public class Controller {
                     case DIGIT2: radioTwo.setSelected(true); break;
                     case DIGIT3: radioThree.setSelected(true); break;
                     case DIGIT4: radioFour.setSelected(true); break;
+                    case ENTER: checkAnswer();
                 }
             }
         });
@@ -101,7 +109,7 @@ public class Controller {
         radioFour.setPrefWidth(Toolkit.getDefaultToolkit().getScreenSize().width-25);
         questionLabel.setPrefWidth(Toolkit.getDefaultToolkit().getScreenSize().width);
 
-        ToggleGroup group = new ToggleGroup();
+        group = new ToggleGroup();
         radioOne.setToggleGroup(group);
         radioTwo.setToggleGroup(group);
         radioThree.setToggleGroup(group);
@@ -109,8 +117,8 @@ public class Controller {
 
 
         ArrayList<String> content = new ArrayList<>();
-        ArrayList<Question> questions = new ArrayList<>();
-        ArrayList<String> wrongQuestions = new ArrayList<>();
+        questions = new ArrayList<>();
+        wrongQuestions = new ArrayList<>();
 
         if(inputFile.exists()){
             try {
@@ -195,7 +203,7 @@ public class Controller {
         }
 
         Collections.shuffle(questions);
-        Iterator<Question> iterator = questions.iterator();
+        iterator = questions.iterator();
         question = iterator.next();
 
         questionLabel.setText("Вопрос " + num + " из " + questions.size() + ". " + question);
@@ -219,14 +227,14 @@ public class Controller {
 
         if(userLabel.getText().equals("")) Platform.exit();
 
-        Thread timerThread = new Thread(new Runnable() {
+        timerThread = new Thread(new Runnable() {
             int minutes = 20;
             double percent = 0.0;
             @Override
             public void run() {
                 while(minutes != 0) {
                     try {
-                        Thread.sleep(600);
+                        Thread.sleep(60000); // 20 minutes countdown timer;
                         progressBar.setProgress(percent=percent+0.05);
                         if (minutes == 0) isTimeOn = false;
                     } catch (InterruptedException e) {
@@ -237,91 +245,10 @@ public class Controller {
         });
 
         timerThread.start();
-        Date startDate = new Date();
+        startDate = new Date();
 
         completeButton.setOnAction(event -> {
-            if (group.getSelectedToggle() != null){
-                RadioButton selected = (RadioButton) group.getSelectedToggle();
-                if (iterator.hasNext()){
-                    if (isTimeOn){
-                        if (selected.getText().equals(question.getRightAns())){
-                            numRightAns++;
-                            num++;
-                            question = iterator.next();
-                            questionLabel.setText("Вопрос " + (num) + " из " + questions.size() + ". " +     question);
-                            radioOne.setText(question.getFirst());
-                            radioTwo.setText(question.getSecond());
-                            radioThree.setText(question.getThird());
-                            radioFour.setText(question.getFourth());
-                            group.selectToggle(null);
-                        }
-                        else
-                        {
-                            wrongQuestions.add("Вопрос №" + (num) + ". " + questions);
-                            num++;
-                            question = iterator.next();
-                            questionLabel.setText("Вопрос " + (num) + " из " + questions.size() + ". " +     question);
-                            radioOne.setText(question.getFirst());
-                            radioTwo.setText(question.getSecond());
-                            radioThree.setText(question.getThird());
-                            radioFour.setText(question.getFourth());
-                            group.selectToggle(null);
-                        }
-                    }
-                    else
-                    {
-                        double percentage = numRightAns/questions.size()*100;
-                        String formattedPercentage =  new DecimalFormat("#0.00").format(percentage);
-                        Alert alertComplete = new Alert(Alert.AlertType.INFORMATION);
-                        alertComplete.setTitle("Время закончилось");
-                        alertComplete.setHeaderText("Вы ответили на " + (int)numRightAns + " из " + questions.size() + " вопросов.");
-                        alertComplete.setContentText("Ваш процент правильных ответов - " + formattedPercentage + "%");
-                        alertComplete.showAndWait();
-                        completeButton.setDisable(true);
-                        Date stopDate = new Date();
-                        try {
-                            writeInFile(userLabel.getText(),startDate,stopDate,(int)numRightAns,formattedPercentage,
-                                    questions.size(),wrongQuestions);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-                else
-                {
-                    if (selected.getText().equals(question.getRightAns())){
-                        numRightAns++;
-                    }
-                    else
-                    {
-                        wrongQuestions.add("Вопрос №" + (num) + ". " + questions);
-                    }
-                    timerThread.stop();
-                    double percentage = numRightAns/questions.size()*100;
-                    String formattedPercentage =  new DecimalFormat("#0.00").format(percentage);
-                    Alert alertComplete = new Alert(Alert.AlertType.INFORMATION);
-                    alertComplete.setTitle("Поздравляю с прохождением теста");
-                    alertComplete.setHeaderText("Вы ответили на " + (int)numRightAns + " из " + questions.size() + " вопросов.");
-                    alertComplete.setContentText("Ваш процент правильных ответов - " + formattedPercentage + "%");
-                    alertComplete.showAndWait();
-                    completeButton.setDisable(true);
-                    Date stopDate = new Date();
-                    try {
-                        writeInFile(userLabel.getText(),startDate,stopDate,(int)numRightAns,formattedPercentage,
-                                questions.size(),wrongQuestions);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-            else
-            {
-                Alert alert = new Alert(Alert.AlertType.WARNING);
-                alert.setTitle("Предупреждение");
-                alert.setHeaderText("Не выбран ни один вариант ответа!");
-                alert.setContentText("Пожалуйста выберите вариант ответа.");
-                alert.showAndWait();
-            }
+            checkAnswer();
         });
 
         sizeSlider.valueProperty().addListener(new ChangeListener<Number>() {
@@ -371,5 +298,90 @@ public class Controller {
         }
         bw.flush();
         Platform.exit();
+    }
+
+    private void checkAnswer(){
+        if (group.getSelectedToggle() != null){
+            RadioButton selected = (RadioButton) group.getSelectedToggle();
+            if (iterator.hasNext()){
+                if (isTimeOn){
+                    if (selected.getText().equals(question.getRightAns())){
+                        numRightAns++;
+                        num++;
+                        question = iterator.next();
+                        questionLabel.setText("Вопрос " + (num) + " из " + questions.size() + ". " +     question);
+                        radioOne.setText(question.getFirst());
+                        radioTwo.setText(question.getSecond());
+                        radioThree.setText(question.getThird());
+                        radioFour.setText(question.getFourth());
+                        group.selectToggle(null);
+                    }
+                    else
+                    {
+                        wrongQuestions.add("Вопрос №" + (num) + ". " + questions);
+                        num++;
+                        question = iterator.next();
+                        questionLabel.setText("Вопрос " + (num) + " из " + questions.size() + ". " +     question);
+                        radioOne.setText(question.getFirst());
+                        radioTwo.setText(question.getSecond());
+                        radioThree.setText(question.getThird());
+                        radioFour.setText(question.getFourth());
+                        group.selectToggle(null);
+                    }
+                }
+                else
+                {
+                    double percentage = numRightAns/questions.size()*100;
+                    String formattedPercentage =  new DecimalFormat("#0.00").format(percentage);
+                    Alert alertComplete = new Alert(Alert.AlertType.INFORMATION);
+                    alertComplete.setTitle("Время закончилось");
+                    alertComplete.setHeaderText("Вы ответили на " + (int)numRightAns + " из " + questions.size() + " вопросов.");
+                    alertComplete.setContentText("Ваш процент правильных ответов - " + formattedPercentage + "%");
+                    alertComplete.showAndWait();
+                    completeButton.setDisable(true);
+                    Date stopDate = new Date();
+                    try {
+                        writeInFile(userLabel.getText(),startDate,stopDate,(int)numRightAns,formattedPercentage,
+                                questions.size(),wrongQuestions);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            else
+            {
+                if (selected.getText().equals(question.getRightAns())){
+                    numRightAns++;
+                }
+                else
+                {
+                    wrongQuestions.add("Вопрос №" + (num) + ". " + questions);
+                }
+                timerThread.stop();
+                double percentage = numRightAns/questions.size()*100;
+                String formattedPercentage =  new DecimalFormat("#0.00").format(percentage);
+                Alert alertComplete = new Alert(Alert.AlertType.INFORMATION);
+                alertComplete.setTitle("Поздравляю с прохождением теста");
+                alertComplete.setHeaderText("Вы ответили на " + (int)numRightAns + " из " + questions.size() + " вопросов.");
+                alertComplete.setContentText("Ваш процент правильных ответов - " + formattedPercentage + "%");
+                alertComplete.showAndWait();
+                completeButton.setDisable(true);
+                Date stopDate = new Date();
+                try {
+                    writeInFile(userLabel.getText(),startDate,stopDate,(int)numRightAns,formattedPercentage,
+                            questions.size(),wrongQuestions);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        else
+        {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Предупреждение");
+            alert.setHeaderText("Не выбран ни один вариант ответа!");
+            alert.setContentText("Пожалуйста выберите вариант ответа.");
+            alert.showAndWait();
+        }
     }
 }
