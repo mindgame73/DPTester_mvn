@@ -10,13 +10,13 @@ import java.awt.*;
 
 public class AppStarter extends Application {
 
+
     @Override
     public void start(Stage primaryStage) throws Exception{
-        Dimension dimension = Toolkit.getDefaultToolkit().getScreenSize();
-        Parent root = FXMLLoader.load(getClass().getResource("sample.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("login.fxml"));
         primaryStage.setTitle("Тестирование персонала Диспетчерского Пункта АО ГНЦ НИИАР.");
-        primaryStage.setScene(new Scene(root,dimension.width-100,dimension.height-100));
-        primaryStage.setMaximized(true);
+        primaryStage.setScene(new Scene(root,600,400));
+        primaryStage.setMaximized(false);
         primaryStage.initStyle(StageStyle.TRANSPARENT);
         primaryStage.show();
 

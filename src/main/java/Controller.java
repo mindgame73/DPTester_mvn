@@ -7,8 +7,10 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.FlowPane;
+import org.controlsfx.control.textfield.TextFields;
 
 import java.awt.*;
 import java.io.*;
@@ -50,8 +52,8 @@ public class Controller {
     @FXML
     private FlowPane lowerPane;
 
-    private final File inputFile = new File("D:/input2.txt");
-    private final File outputFile = new File("D:/results.txt");
+    private final File inputFile = new File("input.dat");
+    private final File outputFile = new File("results.txt");
 
     private Question question;
     private int num = 1;
@@ -205,7 +207,7 @@ public class Controller {
         Collections.shuffle(questions);
         iterator = questions.iterator();
         question = iterator.next();
-
+        userLabel.setText(LoginController.username);
         questionLabel.setText("Вопрос " + num + " из " + questions.size() + ". " + question);
         radioOne.setText(question.getFirst());
         radioTwo.setText(question.getSecond());
@@ -214,29 +216,17 @@ public class Controller {
 
         progressBar.setProgress(0.0);
 
-        TextInputDialog dialog = new TextInputDialog();
-        dialog.setTitle("Регистрация");
-        dialog.setHeaderText("Введите ФИО тестируемого");
-        dialog.setContentText("ФИО: ");
-
-        Optional<String> result = dialog.showAndWait();
-        if (result.toString().equals("")) Platform.exit();
-        result.ifPresent(name -> {
-            userLabel.setText(name);
-        });
-
-        if(userLabel.getText().equals("")) Platform.exit();
-
         timerThread = new Thread(new Runnable() {
-            int minutes = 20;
+            int seconds = 1200;
             double percent = 0.0;
             @Override
             public void run() {
-                while(minutes != 0) {
+                while(seconds != 0) {
                     try {
-                        Thread.sleep(60000); // 20 minutes countdown timer;
-                        progressBar.setProgress(percent=percent+0.05);
-                        if (minutes == 0) isTimeOn = false;
+                        Thread.sleep(1000); // 20 minutes countdown timer;
+                        progressBar.setProgress(percent=percent+0.000833);
+                        seconds--;
+                        if (seconds == 0) isTimeOn = false;
                     } catch (InterruptedException e) {
 
                     }
@@ -297,6 +287,7 @@ public class Controller {
             }
         }
         bw.flush();
+        bw.close();
         Platform.exit();
     }
 
@@ -318,7 +309,7 @@ public class Controller {
                     }
                     else
                     {
-                        wrongQuestions.add("Вопрос №" + (num) + ". " + questions);
+                        wrongQuestions.add("Вопрос №" + (num) + ". " + question);
                         num++;
                         question = iterator.next();
                         questionLabel.setText("Вопрос " + (num) + " из " + questions.size() + ". " +     question);
@@ -331,6 +322,13 @@ public class Controller {
                 }
                 else
                 {
+                    if (selected.getText().equals(question.getRightAns())){
+                        numRightAns++;
+                    }
+                    else
+                    {
+                        wrongQuestions.add("Вопрос №" + (num) + ". " + question);
+                    }
                     double percentage = numRightAns/questions.size()*100;
                     String formattedPercentage =  new DecimalFormat("#0.00").format(percentage);
                     Alert alertComplete = new Alert(Alert.AlertType.INFORMATION);
@@ -355,9 +353,9 @@ public class Controller {
                 }
                 else
                 {
-                    wrongQuestions.add("Вопрос №" + (num) + ". " + questions);
+                    wrongQuestions.add("Вопрос №" + (num) + ". " + question);
                 }
-                timerThread.stop();
+                timerThread.interrupt();
                 double percentage = numRightAns/questions.size()*100;
                 String formattedPercentage =  new DecimalFormat("#0.00").format(percentage);
                 Alert alertComplete = new Alert(Alert.AlertType.INFORMATION);
